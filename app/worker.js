@@ -11,6 +11,19 @@ function chomp(str) {
   return str.substr(0, str.length - 1);
 }
 
+const origDigest = crypto.subtle.digest
+crypto.subtle.digest = function digest (algorithm, data) {
+  if (typeof algorithm === 'string' && algorithm.toLowerCase() === 'md5') {
+    return new Promise((resolve, reject) => {
+      const md5 = require('crypto').createHash('md5');
+      const hash = md5.update(data).digest();
+      return resolve(hash.buffer);
+    })
+  }
+
+  return origDigest.apply(this, arguments)
+}
+
 function buildRequest(url, opts) {
   const { country = "DEV", ip = "127.0.0.1", ray = "0000000000000000", ...requestOpts } = opts;
   const request = new Request(url, { redirect: "manual", ...requestOpts });
